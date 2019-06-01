@@ -27,8 +27,8 @@ python main.py leap 5000
 
 You can find elaborate explanation on numerical analysis algorithms in following links:
 
-
-
-[Numerical analysis]: http://www2.math.umd.edu/~dlevy/classes/amsc466/lecture-notes/integration-chap.pdf
-[Euler algorithm]: http://tutorial.math.lamar.edu/Classes/DE/EulersMethod.aspx
-[Verlet algorithm]: http://www.physics.udel.edu/~bnikolic/teaching/phys660/numerical_ode/node5.html
+> http://www2.math.umd.edu/~dlevy/classes/amsc466/lecture-notes/integration-chap.pdf
+>
+> http://tutorial.math.lamar.edu/Classes/DE/EulersMethod.aspx
+>
+> http://www.physics.udel.edu/~bnikolic/teaching/phys660/numerical_ode/node5.html   
