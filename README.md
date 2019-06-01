@@ -1,5 +1,5 @@
 # Computational-Biophysics-2019
-Homework repository for Computational biophysics class 2019 held in IBB at Tehran university
+Homework repository for Computational Biophysics class 2019 held in IBB at Tehran university
 
 Constructor: Dr Peyman Shariat Panahi
 
