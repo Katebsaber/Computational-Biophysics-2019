@@ -1,25 +1,46 @@
-from itertools import combinations
+from functions import create_box, get_particles_pos,move_one_particle,calculate_energy
+from matplotlib import pyplot as plt
 import numpy as np
-from periodic_boundary_condition.periodic_lattice import Periodic_Lattice
+import time
 
-box_dimention = 5
-number_of_particles = 3
+T = 0.5
+box_dimention = 10
+number_of_particles = 30
 
-box = np.zeros((box_dimention,box_dimention),dtype=int)
-for i in range(number_of_particles):
-    x_pos_temp = np.random.randint(0,box_dimention-1)
-    y_pos_temp = np.random.randint(0,box_dimention-1)
-    box[x_pos_temp,y_pos_temp] = 1
+box = create_box(box_dimention,number_of_particles)
+particles_pos_idx = get_particles_pos(box)
 
-particle_pos_idx = np.array(list(zip(np.nonzero(box)[0],np.nonzero(box)[1])))
+start = time.time()
+list_of_e = []
+for i in range(3000):
+    if (i%100) == 0: print(i) # print itteration number every 100 steps
+    
+    e_temp = 0 # zero out temp energy
+    
+    # do the move
+    status,box_temp,particles_pos_idx_temp = move_one_particle(box,particles_pos_idx)
+    while status != True:
+        status,box_temp,particles_pos_idx_temp = move_one_particle(box,particles_pos_idx)
+    
+    #calculate energies
+    e = calculate_energy(box,particles_pos_idx)
+    e_temp = calculate_energy(box_temp,particles_pos_idx_temp)
 
-print(box)
-print(particle_pos_idx)
+    # check move acceptance
+    if e_temp <= e:
+        box, particles_pos_idx = box_temp,particles_pos_idx_temp
+        list_of_e.append(e_temp)
+    else:
+        p = np.exp(-1 * (e_temp-e) / T) # this shoud change later!
+        accept = np.random.choice(np.arange(0,2), p=[1-p,p])
 
-particle_combination = list(combinations(particle_pos_idx, 2))
-for each in particle_combination:
-    distance_x = abs(each[0][0]-each[1][0])
-    distance_y = abs(each[0][1]-each[1][1])
-    print(each)
-    print(distance_x,distance_y)
-    if distance_x == 1 and distance_y == 1: print(True)
+        if accept:
+            box, particles_pos_idx = box_temp,particles_pos_idx_temp
+            list_of_e.append(e_temp)
+
+end = time.time()
+print('elapsed time: ', end - start)
+
+# print(len(list_of_e))
+plt.plot(list_of_e)
+plt.show()
