@@ -3,19 +3,20 @@ from matplotlib import pyplot as plt
 import numpy as np
 import time
 
-# T = 0.5
 box_dimention = 10
 number_of_particles = 30
+
+assert number_of_particles < box_dimention**2
 
 for j in range(1,41):
     T = 0.5 * j
         
     box = create_box(box_dimention,number_of_particles)
     particles_pos_idx = get_particles_pos(box)
-    
+
     start = time.time()
     list_of_e = []
-    for i in range(3000):
+    for i in range(10000):
         if (i%100) == 0: print(i) # print itteration number every 100 steps
         
         e_temp = 0 # zero out temp energy
@@ -44,6 +45,5 @@ for j in range(1,41):
     end = time.time()
     print('elapsed time: ', end - start)
 
-    # print(len(list_of_e))
     plt.plot(list_of_e)
     plt.show()
