@@ -2,6 +2,7 @@ from functions import create_box, get_particles_pos,move_one_particle,calculate_
 from matplotlib import pyplot as plt
 import numpy as np
 import time
+import pickle
 
 box_dimention = 10
 number_of_particles = 30
@@ -16,8 +17,8 @@ for j in range(1,41):
 
     start = time.time()
     list_of_e = []
-    for i in range(10000):
-        if (i%100) == 0: print(i) # print itteration number every 100 steps
+    for i in range(20000):
+        if (i%1000) == 0: print(i) # print itteration number every 100 steps
         
         e_temp = 0 # zero out temp energy
         
@@ -45,5 +46,12 @@ for j in range(1,41):
     end = time.time()
     print('elapsed time: ', end - start)
 
-    plt.plot(list_of_e)
-    plt.show()
+    # save energies
+    with open('data/{}.pkl'.format(str(T)),'wb') as f:
+        pickle.dump(list_of_e,f)
+    # save box
+    with open('data/box_{}.pkl'.format(str(T)),'wb') as f:
+        pickle.dump(box,f)
+
+    # plt.plot(list_of_e)
+    # plt.show()

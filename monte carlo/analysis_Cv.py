@@ -14,15 +14,16 @@ directory_template = 'data/'
 list_of_pkl = glob(directory_template + '*.pkl')
 
 list_of_Cv_T = []
-for each_file in list_of_pkl:    
+for each_file in list_of_pkl:  
+    print(each_file)  
     # open each file and convert to numpy array
     with open(each_file,'rb') as f:
-        list_of_e = np.array(pickle.loads(f))
+        list_of_e = np.array(pickle.load(f))
         # Find Kb*T based on the name of the file
-        T = float(each_file.split('.')[0])
+        T = float(each_file.split('\\')[1][:-4])
     
     # Itteratively calculate mean to find truncation point in order to get equilibrated states
-    window_size = 3
+    window_size = 100
     for i in range(len(list_of_e) - 2*window_size):
         mean_current = np.mean(list_of_e[i:i+window_size])
         mean_future = np.mean(list_of_e[i+window_size:i+2*window_size])
@@ -36,5 +37,10 @@ for each_file in list_of_pkl:
 # Sort Cv,T list based on T
 list_of_Cv_T = sorted(list_of_Cv_T, key=itemgetter(0))
 
-plt.plot(list_of_Cv_T[1],list_of_Cv_T[0])
-plt.show()
+# Create a pandas dataframe to manage data
+df = pd.DataFrame.from_records(list_of_Cv_T,columns=['Cv','T'],index=['T'])
+
+print(df.head())
+df.to_excel("Cv-T.xlsx")
+# plt.plot(list_of_Cv_T[1],list_of_Cv_T[0])
+# plt.show()
