@@ -5,7 +5,7 @@ from periodic_boundary_condition.periodic_lattice import Periodic_Lattice
 
 def create_box(box_dimention, number_of_particles):    
     box = np.zeros((box_dimention,box_dimention),dtype=int)
-    for i in range(number_of_particles):
+    while len(np.nonzero(box)[0]) < number_of_particles:
         x_pos_temp = np.random.randint(0,box_dimention-1)
         y_pos_temp = np.random.randint(0,box_dimention-1)
         box[x_pos_temp,y_pos_temp] = 1
@@ -25,94 +25,95 @@ def calculate_energy(box, particles_pos_idx):
             energy += 1
     return -1 * energy
 
-def move_one_particle(box,particles_pos_idx):
-    right = np.array([0,1])
-    left = np.array([0,-1])
-    up = np.array([-1,0])
-    down = np.array([1,0])
 
-    # select one particle to move
-    particle_idx = choice(particles_pos_idx)
+def random_move():
+    moves = []
+    moves.append(np.array([0,1])) #right
+    moves.append(np.array([0,-1])) #left = np.array([0,-1])
+    moves.append(np.array([-1,0])) #up = np.array([-1,0])
+    moves.append(np.array([1,0])) #down = np.array([1,0])
+    moves.append(np.array([-1,1])) #up right
+    moves.append(np.array([-1,-1])) #up left
+    moves.append(np.array([1,-1])) #down left
+    moves.append(np.array([1,1])) #down right
+    return choice(moves)
+    
+def check_move(box, random_particle_idx,rnd_move):
+    if box[random_particle_idx[0] + rnd_move[0],
+           random_particle_idx[1] + rnd_move[1]] == 0:
+        return True
+    else:
+        return False
 
-    # select move
-    move_id = np.random.randint(0,8)
+def move(box,random_particle_idx,rnd_move):
+    # Empty the cell
+    box[random_particle_idx[0],random_particle_idx[1]] = 0 
+    
+    # Fill the post-move cell
+    box[random_particle_idx[0] + rnd_move[0],
+        random_particle_idx[1] + rnd_move[1]] = 1
+    
+    return box
+    
+if __name__=='__main__':
+    # UNIT AND INTEGRATION TESTING
 
-    # move right
-    if move_id == 0:    
-        right_id = particle_idx + right 
-        if  box[right_id[0],right_id[1]] == 0: # if true the right cell is empty
-            box[particle_idx[0],particle_idx[1]] = 0
-            box[right_id[0],right_id[1]] = 1
-            return True, box , get_particles_pos(box)
+    # Sample Temperature
+    T = 0.5
+
+    # Create the box
+    box = create_box(6,5)
+    # print(box)
+    
+    # get particle positions
+    # particle_positions = get_particles_pos(box)
+    # print(particle_positions)
+    
+    for i in range(100):
+        # Check number of particles - prior to move
+        print('# of Particles prior: ', len(np.nonzero(box)[0]))
+        print(box)
+
+        # Initiation state
+        status = False
+        while not status:
+            # Choose one particle
+            random_particle_idx = choice(get_particles_pos(box))
+            print(random_particle_idx)
+
+            # Choose a random move
+            rnd_move = random_move()
+            print(rnd_move)
+
+            # Check if the move is possible        
+            status = check_move(box,random_particle_idx,rnd_move)
+            print(status)
+
+        # Do the move 
+        new_box = move(box,random_particle_idx,rnd_move)
+
+        # Get new states
+        # new_particle_positions = get_particles_pos(new_box)
+
+        # Compare energies
+        e = calculate_energy(box,get_particles_pos(box))
+        new_e = calculate_energy(new_box,get_particles_pos(new_box))
+
+        # Accept or discard new state
+        if new_e <= e:
+                box = new_box
         else:
-            return False, box , get_particles_pos(box)
+            p = np.exp(-1 * (new_e-e) / T) # this shoud change later!
+            accept = np.random.choice(np.arange(0,2), p=[1-p,p])
 
-    # move left
-    if move_id == 1:    
-        left_id = particle_idx + left
-        if  box[left_id[0],left_id[1]] == 0: # if true the left cell is empty
-            box[particle_idx[0],particle_idx[1]] = 0
-            box[left_id[0],left_id[1]] = 1
-            return True, box , get_particles_pos(box)
-        else:
-            return False, box , get_particles_pos(box)
+            if accept:
+                box = new_box 
 
-    # move up
-    if move_id == 2:    
-        upper_id = particle_idx + up
-        if  box[upper_id[0],upper_id[1]] == 0: # if true the upper cell is empty
-            box[particle_idx[0],particle_idx[1]] = 0
-            box[upper_id[0],upper_id[1]] = 1
-            return True, box , get_particles_pos(box)
-        else:
-            return False, box , get_particles_pos(box)
+        # Check number of particles - posterior to move
+        print('# of Particles posterior: ', len(np.nonzero(box)[0]))
+        print(box)
 
-    # move down
-    if move_id == 3:    
-        lower_id = particle_idx + down 
-        if  box[lower_id[0],lower_id[1]] == 0: # if true the lower cell is empty
-            box[particle_idx[0],particle_idx[1]] = 0
-            box[lower_id[0],lower_id[1]] = 1
-            return True, box , get_particles_pos(box)
-        else:
-            return False, box , get_particles_pos(box)
-
-    # move right up
-    if move_id == 4:    
-        right_up_id = particle_idx + right + up 
-        if  box[right_up_id[0],right_up_id[1]] == 0: # if true the right up cell is empty
-            box[particle_idx[0],particle_idx[1]] = 0
-            box[right_up_id[0],right_up_id[1]] = 1
-            return True, box , get_particles_pos(box)
-        else:
-            return False, box , get_particles_pos(box)
-
-    # move right down
-    if move_id == 5:    
-        right_down_id = particle_idx + right + down 
-        if  box[right_down_id[0],right_down_id[1]] == 0: # if true the right down cell is empty
-            box[particle_idx[0],particle_idx[1]] = 0
-            box[right_down_id[0],right_down_id[1]] = 1
-            return True, box , get_particles_pos(box)
-        else:
-            return False, box , get_particles_pos(box)
-
-    # move left up
-    if move_id == 6:    
-        left_up_id = particle_idx + left + up 
-        if  box[left_up_id[0],left_up_id[1]] == 0: # if true the left up cell is empty
-            box[particle_idx[0],particle_idx[1]] = 0
-            box[left_up_id[0],left_up_id[1]] = 1
-            return True, box , get_particles_pos(box)
-        else:
-            return False, box , get_particles_pos(box)
-
-    # move left down
-    if move_id == 7:    
-        left_down_id = particle_idx + left + down 
-        if  box[left_down_id[0],left_down_id[1]] == 0: # if true the left down cell is empty
-            box[particle_idx[0],particle_idx[1]] = 0
-            box[left_down_id[0],left_down_id[1]] = 1
-            return True, box , get_particles_pos(box)
-        else:
-            return False, box , get_particles_pos(box)
+        # Garbage collection
+        del new_box
+        del new_e
+            

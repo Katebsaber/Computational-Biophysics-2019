@@ -1,57 +1,87 @@
-from functions import create_box, get_particles_pos,move_one_particle,calculate_energy
+from functions import create_box, get_particles_pos,calculate_energy, random_move, check_move, move
 from matplotlib import pyplot as plt
 import numpy as np
 import time
 import pickle
+from random import choice
 
 box_dimention = 10
 number_of_particles = 30
 
+# Check if the box is able to contain this number of particles
 assert number_of_particles < box_dimention**2
 
 for j in range(1,41):
     T = 0.5 * j
-        
+
+    # Create the box
     box = create_box(box_dimention,number_of_particles)
-    particles_pos_idx = get_particles_pos(box)
 
     start = time.time()
     list_of_e = []
-    for i in range(20000):
-        if (i%1000) == 0: print(i) # print itteration number every 100 steps
-        
-        e_temp = 0 # zero out temp energy
-        
-        # do the move
-        status,box_temp,particles_pos_idx_temp = move_one_particle(box,particles_pos_idx)
-        while status != True:
-            status,box_temp,particles_pos_idx_temp = move_one_particle(box,particles_pos_idx)
-        
-        #calculate energies
-        e = calculate_energy(box,particles_pos_idx)
-        e_temp = calculate_energy(box_temp,particles_pos_idx_temp)
+    list_of_box = []
+    for i in range(10000):
+        # Print every 1000 steps
+        if (i%1000) == 0: print(i)
 
-        # check move acceptance
-        if e_temp <= e:
-            box, particles_pos_idx = box_temp,particles_pos_idx_temp
-            list_of_e.append(e_temp)
+        # Check number of particles - prior to move
+        # print('# of Particles prior: ', len(np.nonzero(box)[0]))
+        # print(box)
+
+        # Initiation state
+        status = False
+        while not status:
+            # Choose one particle
+            random_particle_idx = choice(get_particles_pos(box))
+            # print(random_particle_idx)
+
+            # Choose a random move
+            rnd_move = random_move()
+            # print(rnd_move)
+
+            # Check if the move is possible        
+            status = check_move(box,random_particle_idx,rnd_move)
+            # print(status)
+
+        # Do the move 
+        new_box = move(box,random_particle_idx,rnd_move)
+
+        # Compare energies
+        e = calculate_energy(box,get_particles_pos(box))
+        new_e = calculate_energy(new_box,get_particles_pos(new_box))
+
+        # Accept or discard new state
+        if new_e <= e:
+                box = new_box
+                list_of_e.append(e)
         else:
-            p = np.exp(-1 * (e_temp-e) / T) # this shoud change later!
+            p = np.exp(-1 * (new_e-e) / T) # this shoud change later!
             accept = np.random.choice(np.arange(0,2), p=[1-p,p])
 
             if accept:
-                box, particles_pos_idx = box_temp,particles_pos_idx_temp
-                list_of_e.append(e_temp)
+                box = new_box
+                list_of_e.append(e)
+
+        # Check number of particles - posterior to move
+        # print('# of Particles posterior: ', len(np.nonzero(box)[0]))
+        # print(box)
+
+        # Garbage collection
+        del new_box
+        del new_e
 
     end = time.time()
     print('elapsed time: ', end - start)
 
     # save energies
-    with open('data/{}.pkl'.format(str(T)),'wb') as f:
+    with open('data/e/{}.pkl'.format(str(T)),'wb') as f:
         pickle.dump(list_of_e,f)
+
     # save box
-    with open('data/box_{}.pkl'.format(str(T)),'wb') as f:
+    with open('data/box/{}.pkl'.format(str(T)),'wb') as f:
         pickle.dump(box,f)
 
-    # plt.plot(list_of_e)
+    plt.plot(list_of_e)
+    plt.savefig('data/e/{}.png'.format(str(T)))
+    plt.clf()
     # plt.show()

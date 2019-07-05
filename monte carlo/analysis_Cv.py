@@ -23,7 +23,7 @@ for each_file in list_of_pkl:
         T = float(each_file.split('\\')[1][:-4])
     
     # Itteratively calculate mean to find truncation point in order to get equilibrated states
-    window_size = 100
+    window_size = 10
     for i in range(len(list_of_e) - 2*window_size):
         mean_current = np.mean(list_of_e[i:i+window_size])
         mean_future = np.mean(list_of_e[i+window_size:i+2*window_size])
@@ -35,12 +35,17 @@ for each_file in list_of_pkl:
     list_of_Cv_T.append([Cv,T])
 
 # Sort Cv,T list based on T
-list_of_Cv_T = sorted(list_of_Cv_T, key=itemgetter(0))
+list_of_Cv_T = sorted(list_of_Cv_T, key=itemgetter(1))
 
 # Create a pandas dataframe to manage data
-df = pd.DataFrame.from_records(list_of_Cv_T,columns=['Cv','T'],index=['T'])
+# df = pd.DataFrame.from_records(list_of_Cv_T,columns=['Cv','T'],index=['T'])
 
-print(df.head())
-df.to_excel("Cv-T.xlsx")
-# plt.plot(list_of_Cv_T[1],list_of_Cv_T[0])
+######### Output Options #########
+
+# # Save results to excel
+# df.to_excel("output/Cv-T.xlsx")
+
+# # Show the plots
+# list_of_Cv_T = np.array(list_of_Cv_T)
+# plt.plot(list_of_Cv_T[:,1],list_of_Cv_T[:,0])
 # plt.show()
