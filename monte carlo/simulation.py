@@ -1,12 +1,12 @@
-from functions import create_box, get_particles_pos,calculate_energy, random_move, check_move, move
+from functions import create_box, get_particles_pos,calculate_energy, random_move, check_move, move, calc_e
 from matplotlib import pyplot as plt
 import numpy as np
 import time
 import pickle
 from random import choice
 
-box_dimention = 10
-number_of_particles = 30
+box_dimention = 20
+number_of_particles = 150 
 
 # Check if the box is able to contain this number of particles
 assert number_of_particles < box_dimention**2
@@ -20,10 +20,7 @@ for j in range(1,41):
     start = time.time()
     list_of_e = []
     list_of_box = []
-    for i in range(10000):
-        # Print every 1000 steps
-        if (i%1000) == 0: print(i)
-
+    for i in range(200000):
         # Check number of particles - prior to move
         # print('# of Particles prior: ', len(np.nonzero(box)[0]))
         # print(box)
@@ -47,20 +44,22 @@ for j in range(1,41):
         new_box = move(box,random_particle_idx,rnd_move)
 
         # Compare energies
-        e = calculate_energy(box,get_particles_pos(box))
-        new_e = calculate_energy(new_box,get_particles_pos(new_box))
+        # e = calculate_energy(box)
+        # new_e = calculate_energy(new_box)
+        e = calc_e(box)
+        new_e = calc_e(new_box)
 
         # Accept or discard new state
-        if new_e <= e:
+        if new_e < e:
                 box = new_box
-                list_of_e.append(e)
         else:
-            p = np.exp(-1 * (new_e-e) / T) # this shoud change later!
+            p = 0.008 * T #np.exp(-1 * (new_e-e)/ T**2)  
+            # print('p=',p)
             accept = np.random.choice(np.arange(0,2), p=[1-p,p])
 
             if accept:
                 box = new_box
-                list_of_e.append(e)
+
 
         # Check number of particles - posterior to move
         # print('# of Particles posterior: ', len(np.nonzero(box)[0]))
@@ -70,18 +69,29 @@ for j in range(1,41):
         del new_box
         del new_e
 
+        # Log every 1000 steps
+        if (i%1000) == 0: 
+            print(i)
+
+        if (i%(10)) == 0: 
+            # save energies
+            list_of_e.append(e)
+
+        if (i%10000) == 0: 
+            with open('data/e/{}.pkl'.format(str(T)),'wb') as f:
+                pickle.dump(list_of_e,f)
+
+            # save box
+            with open('data/box/{}.pkl'.format(str(T)),'wb') as f:
+                pickle.dump(box,f)
+
+            plt.plot(list_of_e)
+            plt.savefig('data/e/{}.png'.format(str(T)))
+            # plt.show()
+            plt.clf()
+
     end = time.time()
     print('elapsed time: ', end - start)
 
-    # save energies
-    with open('data/e/{}.pkl'.format(str(T)),'wb') as f:
-        pickle.dump(list_of_e,f)
+    
 
-    # save box
-    with open('data/box/{}.pkl'.format(str(T)),'wb') as f:
-        pickle.dump(box,f)
-
-    plt.plot(list_of_e)
-    plt.savefig('data/e/{}.png'.format(str(T)))
-    plt.clf()
-    # plt.show()

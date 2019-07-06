@@ -4,20 +4,20 @@ from random import choice
 from periodic_boundary_condition.periodic_lattice import Periodic_Lattice
 
 def create_box(box_dimention, number_of_particles):    
-    box = np.zeros((box_dimention,box_dimention),dtype=int)
-    while len(np.nonzero(box)[0]) < number_of_particles:
+    box_t = np.zeros((box_dimention,box_dimention),dtype=int)
+    while len(np.nonzero(box_t)[0]) < number_of_particles:
         x_pos_temp = np.random.randint(0,box_dimention-1)
         y_pos_temp = np.random.randint(0,box_dimention-1)
-        box[x_pos_temp,y_pos_temp] = 1
-    return Periodic_Lattice(box)
+        box_t[x_pos_temp,y_pos_temp] = 1
+    return box_t
 
-def get_particles_pos(box):
-    particles_pos_idx = np.array(list(zip(np.nonzero(box)[0],np.nonzero(box)[1])))
+def get_particles_pos(box_t):
+    particles_pos_idx = np.array(list(zip(np.nonzero(box_t)[0],np.nonzero(box_t)[1])))
     return particles_pos_idx
 
-def calculate_energy(box, particles_pos_idx):
+def calculate_energy(box_t):
     energy = 0
-    particle_combination = list(combinations(particles_pos_idx, 2))
+    particle_combination = list(combinations(get_particles_pos(box_t), 2))
     for each in particle_combination:
         distance_x = abs(each[0][0]-each[1][0])
         distance_y = abs(each[0][1]-each[1][1])
@@ -25,6 +25,21 @@ def calculate_energy(box, particles_pos_idx):
             energy += 1
     return -1 * energy
 
+def calc_e(x):
+    left = np.roll(x,1,axis=1)
+    right = np.roll(x,-1,axis=1)
+    up = np.roll(x,1,axis=0)
+    down = np.roll(x,-1,axis=0)
+    left_up=np.roll(np.roll(x,1,axis=1),1,axis=0)
+    left_down = np.roll(np.roll(x,1,axis=1),-1,axis=0)
+    right_up = np.roll(np.roll(x,-1,axis=1),1,axis=0)
+    right_down = np.roll(np.roll(x,-1,axis=1),-1,axis=0)
+    
+    e = -0.5 * sum(sum(x * (left + right + up + down + left_up + left_down + right_up + right_down)))
+    return e
+
+def random_particle(box_t):
+    return choice(get_particles_pos(box_t))
 
 def random_move():
     moves = []
@@ -38,22 +53,26 @@ def random_move():
     moves.append(np.array([1,1])) #down right
     return choice(moves)
     
-def check_move(box, random_particle_idx,rnd_move):
-    if box[random_particle_idx[0] + rnd_move[0],
-           random_particle_idx[1] + rnd_move[1]] == 0:
+def check_move(box_t, random_particle_idx,rnd_move):
+    box_dimention = len(box_t)
+    if box_t[(random_particle_idx[0] + rnd_move[0])%box_dimention,
+           (random_particle_idx[1] + rnd_move[1])%box_dimention] == 0:
         return True
     else:
         return False
 
 def move(box,random_particle_idx,rnd_move):
+    box_dimention = len(box)
+    box_t = np.copy(box)
+    
     # Empty the cell
-    box[random_particle_idx[0],random_particle_idx[1]] = 0 
+    box_t[random_particle_idx[0],random_particle_idx[1]] = 0 
     
     # Fill the post-move cell
-    box[random_particle_idx[0] + rnd_move[0],
-        random_particle_idx[1] + rnd_move[1]] = 1
+    box_t[(random_particle_idx[0] + rnd_move[0])%box_dimention,
+        (random_particle_idx[1] + rnd_move[1])%box_dimention] = 1
     
-    return box
+    return box_t
     
 if __name__=='__main__':
     # UNIT AND INTEGRATION TESTING
@@ -96,8 +115,8 @@ if __name__=='__main__':
         # new_particle_positions = get_particles_pos(new_box)
 
         # Compare energies
-        e = calculate_energy(box,get_particles_pos(box))
-        new_e = calculate_energy(new_box,get_particles_pos(new_box))
+        e = calculate_energy(box)
+        new_e = calculate_energy(new_box)
 
         # Accept or discard new state
         if new_e <= e:
