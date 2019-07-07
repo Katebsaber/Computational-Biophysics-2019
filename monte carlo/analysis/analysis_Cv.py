@@ -19,7 +19,7 @@ for each_file in list_of_pkl:
     # open each file and convert to numpy array
     with open(each_file,'rb') as f:
         list_of_e = np.array(pickle.load(f))
-        # Find Kb*T based on the name of the file
+        # Find T based on the name of the file
         T = float(each_file.split('\\')[1][:-4])
     
     # Itteratively calculate mean to find truncation point in order to get equilibrated states
